@@ -67,6 +67,13 @@ app.get('/file', (req, res) => {
 	rs.on('close', _ => res.status(200).end());
 });
 
+app.delete('/file', (req, res) => {
+	const { path: filePath } = req.query;
+	const fullPath = path.join(__dirname, PUBLIC_FOLDER, filePath);
+
+	fs.rm(fullPath, () => res.status(200).end());
+});
+
 app.get('/file/info', (req, res) => {
 	const { path: filePath } = req.query;
 
