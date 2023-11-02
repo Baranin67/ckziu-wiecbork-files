@@ -40,10 +40,22 @@ app.get('/list-files', (req, res) => {
 	});
 });
 
-app.put('/file', (req, res) => {
+app.put('/file', async (req, res) => {
 	const { path: filePath, overrideName } = req.query;
 	const bb = busboy({ headers: req.headers });
 	const fullPath = path.join(__dirname, PUBLIC_FOLDER, filePath);
+
+	if (!fs.existsSync(fullPath))
+		fs.mkdirSync(
+			fullPath,
+			{ recursive: true },
+			(err, _) =>
+				err &&
+				res.status(500).json({
+					error: true,
+					message: messages.ERR_UNKNOWN_EXCEPTION,
+				})
+		);
 
 	bb.on('file', (_, file, info) => {
 		file.pipe(
@@ -72,6 +84,15 @@ app.delete('/file', (req, res) => {
 	const fullPath = path.join(__dirname, PUBLIC_FOLDER, filePath);
 
 	fs.rm(fullPath, () => res.status(200).end());
+});
+
+app.delete('/dir', (req, res) => {
+	const { path: dirPath } = req.query;
+	const fullPath = path.join(__dirname, PUBLIC_FOLDER, dirPath);
+
+	fs.rmdir(fullPath, { recursive: true, force: true }, () =>
+		res.status(200).end()
+	);
 });
 
 app.get('/file/info', (req, res) => {
