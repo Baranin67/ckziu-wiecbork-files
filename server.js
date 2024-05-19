@@ -12,15 +12,18 @@ const app = express();
 const PORT = serverCfg.port;
 const PUBLIC_FOLDER = serverCfg.publicFolderPath;
 
-app.use(cors());
+app.use(
+	cors({
+		methods: process.env.ALLOWED_METHODS,
+		origin: process.env.ALLOWED_ORIGIN,
+	})
+);
 app.use(bodyParser.json());
 app.use(express.static(__dirname + PUBLIC_FOLDER));
 
 app.get('/list-files', (req, res) => {
 	let { path, limit, page } = req.query;
 	page--;
-
-	console.log(page, limit);
 
 	fs.readdir(__dirname + PUBLIC_FOLDER + (path || '/'), (err, files) => {
 		if (err) {
