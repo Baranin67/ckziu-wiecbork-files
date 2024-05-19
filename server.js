@@ -9,7 +9,7 @@ const messages = require('./cfg/messages.json');
 const serverCfg = require('./cfg/server.json');
 
 const app = express();
-const PORT = serverCfg.port;
+const PORT = process.env.SERVER_PORT;
 const PUBLIC_FOLDER = serverCfg.publicFolderPath;
 
 app.use(
