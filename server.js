@@ -8,6 +8,8 @@ const path = require('path');
 const messages = require('./cfg/messages.json');
 const serverCfg = require('./cfg/server.json');
 
+require('dotenv').config();
+
 const app = express();
 const PORT = process.env.SERVER_PORT;
 const PUBLIC_FOLDER = serverCfg.publicFolderPath;
