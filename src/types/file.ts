@@ -43,6 +43,6 @@ export namespace FileRequestQuery {
 
 export namespace FileRequestBody {
     export type Patch = {
-        data: Pick<File, 'name' | 'path' | 'size' | 'createdAt' | 'updatedAt'>;
+        data: Pick<Partial<File>, 'name' | 'path'>;
     };
 }
