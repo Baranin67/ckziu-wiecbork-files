@@ -4,6 +4,7 @@
 **/node_modules
 /.pnp
 .pnp.js
+package-lock.json
 
 # testing
 /coverage
@@ -21,3 +22,6 @@ yarn-error.log*
 
 # uploaded files
 **/public/uploads
+
+# output files
+**/out
