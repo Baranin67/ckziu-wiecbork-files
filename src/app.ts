@@ -57,7 +57,7 @@ app.use('/api', router);
 
 app.listen(serverPort, err => {
     if (err) {
-        console.error(err.message);
+        console.error(`[Error] ${err.name}: ${err.message}`);
         return;
     }
 
