@@ -4,6 +4,7 @@ import { exit } from 'process';
 import dotenv from 'dotenv';
 
 import { RouterController } from './controllers/router';
+import path from 'path';
 
 // INICJALIZACJA
 
@@ -37,6 +38,9 @@ if (isNaN(serverPort)) {
 
 // MIDDLEWARE
 
+const publicDirAbsPath = path.join(process.cwd(), '/public');
+app.use('/public', express.static(publicDirAbsPath));
+
 app.use(express.json());
 app.use(
     cors({
@@ -44,6 +48,11 @@ app.use(
         origin: corsAllowOrigin
     })
 );
+app.use((req, _, next) => {
+    console.debug(`${req.method} ${req.path} from ${req.hostname}`);
+    console.debug(`⌊ Params: ${JSON.stringify(req.query)}`);
+    next();
+});
 
 // ROUTERY
 
