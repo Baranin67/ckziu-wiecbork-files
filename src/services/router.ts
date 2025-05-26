@@ -1,5 +1,6 @@
 import express, { Router } from 'express';
-import { FileService } from './file';
+
+import { FileService } from './file.js';
 
 export class RouterService {
     private router: Router;

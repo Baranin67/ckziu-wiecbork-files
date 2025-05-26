@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { RouterHandlers } from '../types/api';
+
+import { RouterHandlers } from '../types/api.js';
 
 export class Service {
     private basePath: string;

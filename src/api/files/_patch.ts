@@ -1,33 +1,29 @@
 import fs from 'fs';
-
-import { NodeRequest, NodeResponse } from '../../types/api';
-import { FileRequestBody, FileRequestQuery } from '../../types/file';
 import path from 'path';
 
+import { NodeRequest, NodeResponse } from '../../types/api.js';
+import { FileRequestBody, FileRequestOptions } from '../../types/file.js';
+
 export default async function (req: NodeRequest, res: NodeResponse) {
-    const { name: currentName, path: currentPath } =
-        req.query as FileRequestQuery.Patch;
-    const reqBody = req.body as FileRequestBody.Patch;
+    const options = req.query as FileRequestOptions.Delete;
+    const data = (req.body as FileRequestBody.Patch).data;
+
+    const currentName = options.filters?.name;
+    const currentPath = options.filters?.path;
 
     if (
         currentName === undefined ||
         currentPath === undefined ||
-        reqBody?.data === undefined
+        data === undefined
     ) {
-        const missingParams = [];
-        if (currentName === undefined) missingParams.push('name');
-        if (currentPath === undefined) missingParams.push('path');
-        if (reqBody?.data === undefined) missingParams.push('data');
-
         res.status(400).json({
             code: 400,
-            type: 'BAD_REQ',
-            missingParams
+            type: 'BAD_REQ'
         });
         return;
     }
 
-    const { name: newName, path: newPath } = reqBody.data;
+    const { name: newName, path: newPath } = data;
 
     const currentAbsPath = path.join(
         process.cwd(),

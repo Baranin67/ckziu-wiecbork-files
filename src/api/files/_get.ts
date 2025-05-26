@@ -1,31 +1,18 @@
 import fs from 'fs';
 import path from 'path';
+import mime from 'mime';
 
-import { NodeRequest, NodeResponse } from '../../types/api';
-import { FileRequestQuery } from '../../types/file';
-import { File } from '../../models/file';
-import { Blob } from 'buffer';
+import { NodeRequest, NodeResponse } from '../../types/api.js';
+import { File, FileRequestOptions } from '../../types/file.js';
+
+import { parseQueryString } from '../../utils/api.js';
 
 export default async function (req: NodeRequest, res: NodeResponse) {
-    // ZAPYTANIE
+    // ŻĄDANIE
 
-    const select = req.query.select as FileRequestQuery.View['select'];
-    const where = req.query.where as FileRequestQuery.View['where'];
-    const orderBy = req.query.orderBy as FileRequestQuery.View['orderBy'];
-    const page = parseInt(
-        String(req.query.page)
-    ) as FileRequestQuery.View['page'];
-    const perPage = parseInt(
-        String(req.query.perPage)
-    ) as FileRequestQuery.View['perPage'];
+    const options = parseQueryString(req) as FileRequestOptions.View;
 
-    if (
-        (req.query.select !== undefined && typeof select !== 'object') ||
-        (req.query.where !== undefined && typeof where !== 'object') ||
-        (req.query.orderBy !== undefined && typeof orderBy !== 'object') ||
-        (req.query.page !== undefined && isNaN(page)) ||
-        (req.query.perPage !== undefined && isNaN(perPage))
-    ) {
+    if (options.fields === undefined) {
         res.status(400).json({
             code: 400,
             type: 'BAD_REQ'
@@ -33,95 +20,71 @@ export default async function (req: NodeRequest, res: NodeResponse) {
         return;
     }
 
-    Object.keys(where).forEach(key => {
-        if (where[key] === 'true') where[key] = true;
-        else if (where[key] === 'false') where[key] = false;
-        else if (!isNaN(parseInt(where[key])))
-            where[key] = parseInt(where[key]);
-        else if (!isNaN(parseFloat(where[key])))
-            where[key] = parseFloat(where[key]);
-    });
-
     // KONFIGURACJA
 
-    const absPath = path.join(process.cwd(), '/public/uploads', where.path);
+    const dirAbsPath = path.join(
+        process.cwd(),
+        '/public/uploads',
+        options.filters.path
+    );
 
-    const files = fs.readdirSync(absPath);
+    // POBIERANIE
+    // wpisów katalogu
 
-    if (files === null) {
-        res.status(500).send({
-            code: 500,
-            type: 'UNKNOWN'
-        });
-        return;
-    }
+    let dirEntries = fs.readdirSync(dirAbsPath, { withFileTypes: true });
 
-    let filteredFiles: Partial<File>[] = [];
+    // FILTROWANIE
 
-    if (where.name !== undefined)
-        filteredFiles = files
-            .filter(file => file === where.name)
-            .map(file => new File(file, where.path, null, null, null, null));
+    if (options.filters.name !== undefined)
+        dirEntries = dirEntries.filter(
+            dirEnt => dirEnt.name === options.filters.name
+        );
 
-    const filesReadStatus: boolean[] = filteredFiles.map(() => false);
-
-    filteredFiles.forEach((file, fileIdx) => {
-        const fileAbsPath = path.join(absPath, file.name);
-        const fileStream = fs.createReadStream(fileAbsPath);
-        const fileStats = fs.statSync(fileAbsPath);
-
-        file.size = fileStats.size;
-        file.createdAt = fileStats.birthtime;
-        file.updatedAt = fileStats.birthtime;
-
-        let fileBlob = '';
-        fileStream.on('readable', () => {
-            let chunk;
-            while (null !== (chunk = fileStream.read())) {
-                fileBlob += chunk;
-            }
+    if (options.filters.isDirectory !== undefined)
+        dirEntries = dirEntries.filter(dirEnt => {
+            console.log(
+                dirEnt.isDirectory(),
+                '===',
+                options.filters.isDirectory,
+                ':',
+                dirEnt.isDirectory() === options.filters.isDirectory
+            );
+            return dirEnt.isDirectory() === options.filters.isDirectory;
         });
 
-        fileStream.on('end', () => {
-            file.blob = new Blob([fileBlob]);
-            filesReadStatus[fileIdx] = true;
+    // MAPOWANIE
+    // wpisów na obiekty `File`
 
-            console.log(fileBlob);
+    const files: Partial<File>[] = dirEntries.map(dirEntry => {
+        const isEntryDir = dirEntry.isDirectory();
+        const entryAbsPath = path.join(dirAbsPath, dirEntry.name);
+        const entryStats = fs.statSync(entryAbsPath);
 
-            if (filesReadStatus.every(s => s)) {
-                res.status(200).json({
-                    code: 200,
-                    data:
-                        select === undefined
-                            ? filteredFiles
-                            : filteredFiles.map(file => {
-                                  Object.keys(select)
-                                      .filter(key => select[key])
-                                      .map(key => ({
-                                          [key]: file[key]
-                                      }));
-                              })
-                });
-            }
-        });
+        let fileMimeType = isEntryDir ? null : mime.getType(entryAbsPath);
+
+        return {
+            name: dirEntry.name,
+            path: options.filters.path,
+            isDirectory: isEntryDir,
+            createdAt: entryStats.birthtime,
+            updatedAt: entryStats.mtime,
+            size: isEntryDir ? null : entryStats.size,
+            mimeType: fileMimeType
+        };
     });
 
-    // const bb = busboy({ headers: req.headers });
-    // const fullPath = path.join(process.cwd(), '/public/uploads', reqPath);
-    // if (!fs.existsSync(fullPath)) fs.mkdirSync(fullPath, { recursive: true });
+    // ODPOWIEDŹ
 
-    // // ZAPISYWANIE PLIKU
+    res.status(200).json({
+        code: 200,
+        data: files.map(file => {
+            let filteredFile = {};
 
-    // bb.on('file', (_, file, info) => {
-    //     file.pipe(
-    //         fs.createWriteStream(
-    //             path.join(fullPath, reqOverrideName ?? info.filename)
-    //         )
-    //     );
-    // });
+            Object.keys(options.fields).forEach(field => {
+                filteredFile = { ...filteredFile, [field]: file[field] };
+            });
 
-    // // ODPOWIEDŹ
-
-    // bb.on('close', () => res.status(200).json({ code: 200 }));
-    // req.pipe(bb);
+            return filteredFile;
+        })
+    });
 }

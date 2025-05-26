@@ -3,7 +3,7 @@ import cors from 'cors';
 import { exit } from 'process';
 import dotenv from 'dotenv';
 
-import { RouterController } from './controllers/router';
+import { RouterController } from './controllers/router.js';
 import path from 'path';
 
 // INICJALIZACJA
@@ -38,8 +38,8 @@ if (isNaN(serverPort)) {
 
 // MIDDLEWARE
 
-const publicDirAbsPath = path.join(process.cwd(), '/public');
-app.use('/public', express.static(publicDirAbsPath));
+const publicDirAbsPath = path.join(process.cwd(), '/public/uploads');
+app.use('/uploads', express.static(publicDirAbsPath));
 
 app.use(express.json());
 app.use(

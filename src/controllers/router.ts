@@ -1,4 +1,4 @@
-import { RouterService } from '../services/router';
+import { RouterService } from '../services/router.js';
 
 export class RouterController {
     private routerService: RouterService;

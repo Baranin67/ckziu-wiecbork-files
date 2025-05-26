@@ -1,23 +1,21 @@
-import busboy from 'busboy';
 import fs from 'fs';
 import path from 'path';
 
-import { NodeRequest, NodeResponse } from '../../types/api';
-import { FileRequestQuery } from '../../types/file';
+import { NodeRequest, NodeResponse } from '../../types/api.js';
+import { FileRequestOptions } from '../../types/file.js';
 
 export default async function (req: NodeRequest, res: NodeResponse) {
     // ZAPYTANIE
 
-    const { path: reqPath, name: reqName } =
-        req.query as FileRequestQuery.Delete;
+    const options = req.query as FileRequestOptions.Delete;
 
-    const isPathGiven = typeof reqPath === 'string';
-    const isNameGiven = typeof reqName === 'string';
-
-    if (!isPathGiven || !isNameGiven) {
+    if (
+        options.filters.name === undefined ||
+        options.filters.path === undefined
+    ) {
         const missingParams = [];
-        if (!isPathGiven) missingParams.push('path');
-        if (!isNameGiven) missingParams.push('name');
+        if (options.filters.name === undefined) missingParams.push('name');
+        if (options.filters.path === undefined) missingParams.push('path');
 
         res.status(400).json({ code: 400, type: 'BAD_REQ', missingParams });
         return;
@@ -28,8 +26,8 @@ export default async function (req: NodeRequest, res: NodeResponse) {
     const absPath = path.join(
         process.cwd(),
         '/public/uploads',
-        reqPath,
-        reqName
+        options.filters.path,
+        options.filters.name
     );
 
     if (!fs.existsSync(absPath)) {

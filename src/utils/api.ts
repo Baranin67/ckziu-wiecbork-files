@@ -1,5 +1,8 @@
 import qs from 'qs';
-import { isNumeric } from './text';
+
+import { NodeRequest } from '../types/api.js';
+
+import { isNumeric } from './text.js';
 
 /**
  * Wywołuje dekoder, który zamienia typ danych wartości na ten odpowiedni dla niej.
@@ -9,18 +12,12 @@ export function executeCustomQsDecoder(
     str: string,
     type: 'key' | 'value'
 ): any {
-    // Dla klucza, zwraca po prostu jego nazwę.
     if (type === 'key') return str;
-    // Dla wartości, trzeba sprawdzić, jaki jest typ danych.
     else if (type === 'value') {
-        // string równy 'true'
         if (str === 'true') return true;
-        // string równy 'false'
         else if (str === 'false') return false;
-        // string w całości wartością numeryczną
         else if (isNumeric(str)) return parseInt(str);
-        // string zawierający cokolwiek innego
-        else return str;
+        else return str.replace(/%2F/g, '/');
     }
 }
 
@@ -28,12 +25,17 @@ export function executeCustomQsDecoder(
  * Konwertuje string'a na obiekt Qs.
  * @returns Przekonwertowany string na obiekt Qs.
  */
-export function parseQueryString(url: string, host: string) {
-    return qs.parse(new URL(url, `http://${host}`).search.substring(1), {
-        decoder: (str, _defaultDecoder, _charset, type) =>
-            executeCustomQsDecoder(str, type),
-        depth: 10
-    });
+export function parseQueryString(req: NodeRequest) {
+    if (req === undefined) return null;
+
+    return qs.parse(
+        new URL(req.url, `http://${req.headers.host}`).search.substring(1),
+        {
+            decoder: (str, _defaultDecoder, _charset, type) =>
+                executeCustomQsDecoder(str, type),
+            depth: 10
+        }
+    );
 }
 
 /**

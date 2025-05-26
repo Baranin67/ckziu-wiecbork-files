@@ -1,10 +1,11 @@
 export type File = {
     name: string;
     path: string;
-    size: number;
-    blob: Blob;
+    isDirectory: boolean;
     createdAt: Date;
     updatedAt: Date;
+    mimeType: string | null;
+    size: number | null;
 };
 
 export type FileSelect = {
@@ -19,25 +20,26 @@ export type FileOrderBy = {
     [key in keyof File]?: 'asc' | 'desc';
 };
 
-export namespace FileRequestQuery {
+export namespace FileRequestOptions {
     export type Create = {
-        path: string;
-        overrideName?: string;
+        fileOptions: {
+            path: string;
+            overrideNames?: string[];
+        };
     };
     export type View = {
-        select?: FileSelect;
-        where?: FileWhere;
+        fields?: FileSelect;
+        filters?: FileWhere;
         orderBy?: FileOrderBy;
-        page?: number;
-        perPage?: number;
+        skip?: number;
+        take?: number;
     };
     export type Patch = {
-        name: string;
-        path: string;
+        filters?: FileWhere;
     };
     export type Delete = {
-        name: string;
-        path: string;
+        filters?: FileWhere;
+        limit?: number;
     };
 }
 

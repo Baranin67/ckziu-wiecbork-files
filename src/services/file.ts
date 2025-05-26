@@ -1,16 +1,9 @@
-import fs from 'fs';
-import path from 'path';
-import busboy from 'busboy';
+import _put from '../api/files/_put.js';
+import _get from '../api/files/_get.js';
+import _patch from '../api/files/_patch.js';
+import _delete from '../api/files/_delete.js';
 
-import type { FileWhere } from '../types/file';
-
-import { File } from '../models/file';
-
-import _put from '../api/files/_put';
-import _get from '../api/files/_get';
-import _patch from '../api/files/_patch';
-import _delete from '../api/files/_delete';
-import { Service } from './service';
+import { Service } from './service.js';
 
 export class FileService extends Service {
     constructor() {
