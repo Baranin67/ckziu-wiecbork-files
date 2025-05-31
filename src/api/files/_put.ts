@@ -26,7 +26,7 @@ export default async function (req: NodeRequest, res: NodeResponse) {
     const bb = busboy({ headers: req.headers });
     const fullPath = path.join(
         process.cwd(),
-        '/public/uploads',
+        '/public',
         options.fileOptions.path
     );
     if (!fs.existsSync(fullPath)) fs.mkdirSync(fullPath, { recursive: true });
