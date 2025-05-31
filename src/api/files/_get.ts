@@ -35,9 +35,9 @@ export default async function (req: NodeRequest, res: NodeResponse) {
 
     // FILTROWANIE
 
-    if (options.filters.name !== undefined)
+    if (options.filters.path !== undefined)
         dirEntries = dirEntries.filter(
-            dirEnt => dirEnt.name === options.filters.name
+            dirEnt => dirEnt.parentPath === options.filters.path
         );
 
     if (options.filters.isDirectory !== undefined)
