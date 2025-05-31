@@ -1,5 +1,4 @@
 export type File = {
-    name: string;
     path: string;
     isDirectory: boolean;
     createdAt: Date;
@@ -45,6 +44,6 @@ export namespace FileRequestOptions {
 
 export namespace FileRequestBody {
     export type Patch = {
-        data: Pick<Partial<File>, 'name' | 'path'>;
+        data: Pick<Partial<File>, 'path'>;
     };
 }

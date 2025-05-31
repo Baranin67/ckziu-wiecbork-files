@@ -9,12 +9,8 @@ export default async function (req: NodeRequest, res: NodeResponse) {
 
     const options = req.query as FileRequestOptions.Delete;
 
-    if (
-        options.filters.name === undefined ||
-        options.filters.path === undefined
-    ) {
+    if (options.filters.path === undefined) {
         const missingParams = [];
-        if (options.filters.name === undefined) missingParams.push('name');
         if (options.filters.path === undefined) missingParams.push('path');
 
         res.status(400).json({ code: 400, type: 'BAD_REQ', missingParams });
@@ -26,8 +22,7 @@ export default async function (req: NodeRequest, res: NodeResponse) {
     const absPath = path.join(
         process.cwd(),
         '/public/uploads',
-        options.filters.path,
-        options.filters.name
+        options.filters.path
     );
 
     if (!fs.existsSync(absPath)) {

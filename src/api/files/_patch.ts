@@ -8,14 +8,9 @@ export default async function (req: NodeRequest, res: NodeResponse) {
     const options = req.query as FileRequestOptions.Delete;
     const data = (req.body as FileRequestBody.Patch).data;
 
-    const currentName = options.filters?.name;
     const currentPath = options.filters?.path;
 
-    if (
-        currentName === undefined ||
-        currentPath === undefined ||
-        data === undefined
-    ) {
+    if (currentPath === undefined || data === undefined) {
         res.status(400).json({
             code: 400,
             type: 'BAD_REQ'
@@ -23,13 +18,12 @@ export default async function (req: NodeRequest, res: NodeResponse) {
         return;
     }
 
-    const { name: newName, path: newPath } = data;
+    const { path: newPath } = data;
 
     const currentAbsPath = path.join(
         process.cwd(),
         '/public/uploads',
-        currentPath,
-        currentName
+        currentPath
     );
 
     if (!fs.existsSync(currentAbsPath)) {
@@ -40,8 +34,7 @@ export default async function (req: NodeRequest, res: NodeResponse) {
     const newAbsPath = path.join(
         process.cwd(),
         '/public/uploads',
-        typeof newPath === 'string' ? newPath : currentPath,
-        typeof newName === 'string' ? newName : currentName
+        typeof newPath === 'string' ? newPath : currentPath
     );
 
     if (newAbsPath !== currentAbsPath) {
