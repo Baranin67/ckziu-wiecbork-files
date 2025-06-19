@@ -26,18 +26,13 @@ export namespace FileRequestOptions {
             overrideNames?: string[];
         };
     };
-    export type View = {
-        fields?: FileSelect;
-        filters?: FileWhere;
-        orderBy?: FileOrderBy;
-        skip?: number;
-        take?: number;
-    };
     export type Patch = {
         filters?: FileWhere;
     };
     export type Delete = {
-        filters?: FileWhere;
+        filters?: {
+            paths?: string[];
+        };
         limit?: number;
     };
 }
