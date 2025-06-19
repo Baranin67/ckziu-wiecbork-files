@@ -5,7 +5,7 @@ import { NodeRequest, NodeResponse } from '../../types/api.js';
 import { FileRequestBody, FileRequestOptions } from '../../types/file.js';
 
 export default async function (req: NodeRequest, res: NodeResponse) {
-    const options = req.query as FileRequestOptions.Delete;
+    const options = req.query as FileRequestOptions.Patch;
     const data = (req.body as FileRequestBody.Patch).data;
 
     const currentPath = options.filters?.path;
@@ -20,11 +20,7 @@ export default async function (req: NodeRequest, res: NodeResponse) {
 
     const { path: newPath } = data;
 
-    const currentAbsPath = path.join(
-        process.cwd(),
-        '/public/uploads',
-        currentPath
-    );
+    const currentAbsPath = path.join(process.cwd(), '/public', currentPath);
 
     if (!fs.existsSync(currentAbsPath)) {
         res.status(400).json({ code: 400, type: 'FILE_UNKNOWN' });
