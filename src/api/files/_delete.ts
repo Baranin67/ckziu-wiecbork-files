@@ -9,9 +9,9 @@ export default async function (req: NodeRequest, res: NodeResponse) {
 
     const options = req.query as FileRequestOptions.Delete;
 
-    if (options.filters.path === undefined) {
+    if (options.filters.paths === undefined) {
         const missingParams = [];
-        if (options.filters.path === undefined) missingParams.push('path');
+        if (options.filters.paths === undefined) missingParams.push('paths');
 
         res.status(400).json({ code: 400, type: 'BAD_REQ', missingParams });
         return;
@@ -19,24 +19,32 @@ export default async function (req: NodeRequest, res: NodeResponse) {
 
     // KONFIGURACJA
 
-    const absPath = path.join(
-        process.cwd(),
-        '/public/uploads',
-        options.filters.path
-    );
+    const absBasePath = path.join(process.cwd(), '/public');
 
-    if (!fs.existsSync(absPath)) {
+    if (!fs.existsSync(absBasePath)) {
         res.status(400).json({ code: 400, type: 'FILE_UNKNOWN' });
         return;
     }
 
-    // USUWANIE PLIKU + ODPOWIEDŹ
+    // USUWANIE PLIKÓW + ODPOWIEDŹ
 
-    fs.rm(absPath, err => {
-        if (err) {
-            res.status(500).json({ code: 500, type: 'UNKNOWN' });
-            return;
-        }
-        res.status(200).json({ code: 200 });
+    let fsIterator = 0;
+    let fsErrorFilesPaths: string[] = [];
+
+    options.filters.paths.forEach(filePath => {
+        const absPath = path.join(absBasePath, filePath);
+
+        fs.rm(absPath, err => {
+            fsIterator++;
+
+            if (err) fsErrorFilesPaths.push(filePath);
+
+            if (fsIterator === options.filters.paths.length) {
+                res.status(200).json({
+                    code: 200,
+                    notDeletedFiles: fsErrorFilesPaths
+                });
+            }
+        });
     });
 }
